@@ -152,6 +152,3 @@ while True:
 
 print("Part 1: %d" % (count_occuped(field_1)))
 print("Part 2: %d" % (count_occuped(field_2)))
-
-
-
