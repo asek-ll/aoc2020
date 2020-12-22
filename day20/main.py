@@ -91,34 +91,41 @@ def print_tile(mp):
     for r in mp:
         print("".join(r))
 
-def rotate(tid, count = 1):
-    for i in range(0, count):
-        mp = tile_by_id[tid]
-        mp2 = []
-        for i in range(0, len(mp)):
-            rw = []
-            mp2.append(rw)
-            for j in range(0, len(mp)):
-                rw.append(mp[len(mp)-j-1][i])
+def rotate_map(mp):
+    mp2 = []
+    for i in range(0, len(mp)):
+        rw = []
+        for j in range(0, len(mp)):
+            rw.append(mp[len(mp)-j-1][i])
+        mp2.append(rw)
 
-        
-        tile_by_id[tid] = mp2
+    return mp2
+
+def flip_vert_map(mp):
+    return mp[::-1]
+
+def flip_hor_map(mp):
+    mp2 = []
+
+    for r in mp:
+        mp2.append(r[::-1])
+
+    return mp2
+
+
+def rotate(tid, count = 1):
+    # print("ROTATE %d by %d" % (tid, count * 90))
+    for i in range(0, count):
+        tile_by_id[tid] = rotate_map(tile_by_id[tid])
 
 
     corners_for_tile[tid] = get_corners(tile_by_id[tid])
 
 def reverse(tid, vert):
     if vert:
-        tile_by_id[tid] = tile_by_id[tid][::-1]
-
+        tile_by_id[tid] = flip_vert_map(tile_by_id[tid])
     else:
-        mp = tile_by_id[tid]
-        mp2 = []
-
-        for r in mp:
-            mp2.append(r[::-1])
-
-        tile_by_id[tid] = mp2
+        tile_by_id[tid] = flip_hor_map(tile_by_id[tid])
 
 
     corners_for_tile[tid] = get_corners(tile_by_id[tid])
@@ -139,60 +146,106 @@ rotate_corner(c1)
 
 def find_right_tile(tid):
     r_c = corners_for_tile[tid][1]
-    print("SEARCH")
-    print(r_c)
+    # print("SEARCH")
+
+    r_c_i = r_c[::-1]
+
     if r_c in tile_for_corner:
         tids = tile_for_corner[r_c]
-        if len(tids) == 1:
-            return None
-
-        r_tid = next(iter(tids.difference(set([tid]))))
-
-        r_c_i = r_c[::-1]
-        r_corners = corners_for_tile[r_tid]
-        for i in range(0, len(r_corners)):
-            c = r_corners[i]
-            if c == r_c:
-                rotate(r_tid, 3-i)
-                return r_tid
-
-            if c == r_c_i:
-                rotate(r_tid, 3-i)
-                reverse(r_tid, True)
-                return r_tid
-            
+    elif r_c_i in tile_for_corner:
+        tids = tile_for_corner[r_c_i]
     else:
         raise Exception("WTF???")
+
+    if len(tids) == 1:
+        return None
+
+    # print("FOUNDED from len %d" % (len(tids)))
+
+    r_tid = next(iter(tids.difference(set([tid]))))
+    # jm([[r_tid]])
+
+    r_c_i = r_c[::-1]
+    r_corners = corners_for_tile[r_tid]
+    for i in range(0, len(r_corners)):
+        c = r_corners[i]
+        if c == r_c:
+            if i == 0:
+                rotate(r_tid, 1)
+                reverse(r_tid, False)
+            elif i == 1:
+                reverse(r_tid, False)
+            elif i == 2:
+                rotate(r_tid, 1)
+
+            # jm([[r_tid]])
+            return r_tid
+
+        if c == r_c_i:
+            if i == 0:
+                rotate(r_tid, 3)
+            elif i == 1:
+                rotate(r_tid, 2)
+            elif i == 2:
+                rotate(r_tid, 1)
+                reverse(r_tid, True)
+            elif i == 3:
+                reverse(r_tid, True)
+            # jm([[r_tid]])
+            return r_tid
 
 
 def find_bot_tile(tid):
     r_c = corners_for_tile[tid][2]
-    print("B SEARCH")
-    print(r_c)
+    # print("B SEARCH")
+    # print(r_c)
+    r_c_i = r_c[::-1]
     if r_c in tile_for_corner:
         tids = tile_for_corner[r_c]
-        print(len(tids))
-        if len(tids) == 1:
-            return None
-
-
-        r_tid = next(iter(tids.difference(set([tid]))))
-
-        r_c_i = r_c[::-1]
-        r_corners = corners_for_tile[r_tid]
-        for i in range(0, len(r_corners)):
-            c = r_corners[i]
-            if c == r_c:
-                rotate(r_tid, 4-i)
-                return r_tid
-
-            if c == r_c_i:
-                rotate(r_tid, 4-i)
-                reverse(r_tid, True)
-                return r_tid
-            
+    elif r_c_i in tile_for_corner:
+        tids = tile_for_corner[r_c_i]
     else:
         raise Exception("WTF???")
+
+    # print(len(tids))
+
+    if len(tids) == 1:
+        return None
+
+
+    # print("FOUNDED from len %d" % (len(tids)))
+
+    r_tid = next(iter(tids.difference(set([tid]))))
+    # jm([[r_tid]])
+
+    r_corners = corners_for_tile[r_tid]
+    for i in range(0, len(r_corners)):
+        c = r_corners[i]
+        if c == r_c:
+            if i == 1:
+                rotate(r_tid, 3)
+            elif i == 2:
+                reverse(r_tid, True)
+            elif i == 3:
+                rotate(r_tid, 1)
+                reverse(r_tid, False)
+
+            # jm([[r_tid]])
+            return r_tid
+
+        if c == r_c_i:
+            if i == 0:
+                reverse(r_tid, False)
+            elif i == 1:
+                rotate(r_tid, 1)
+                reverse(r_tid, True)
+            elif i == 2:
+                rotate(r_tid, 2)
+            elif i == 3:
+                rotate(r_tid, 1)
+
+            # jm([[r_tid]])
+            return r_tid
 
 
 def restore_line(s_tid):
@@ -218,15 +271,18 @@ def jm(pt):
                 l.append(" ")
             res.append("".join(l))
             print("".join(l))
+        print("")
 
     return jm
 
 
 
 restored = []
+# jm([[c1[0]]])
 rl = restore_line(c1[0])
 restored.append(rl)
-jm(restored)
+# print(restored)
+# jm(restored)
 i = 0
 while True:
     b_t = find_bot_tile(restored[i][0])
@@ -234,7 +290,76 @@ while True:
         break
 
     restored.append(restore_line(b_t))
+    # print(restored)
+    # jm(restored)
     i += 1
 
 
-jm(restored)
+# print(restored)
+# jm(restored)
+
+def conc(pt):
+    res = []
+    for r in pt:
+        for i in range(1, H-1):
+            l = []
+            for tid in r:
+                mp = tile_by_id[tid]
+                l.append("".join(mp[i][1:-1]))
+            res.append("".join(l))
+
+    return res
+
+
+monster = """                  # 
+#    ##    ##    ###
+ #  #  #  #  #  #""".split('\n')
+
+mp = conc(restored)
+
+def is_monster(mp, monster, s_i, s_j):
+    for i in range(0, len(monster)):
+        for j in range(0, len(monster[i])):
+            if monster[i][j] == '#' and mp[s_i + i][s_j + j] != '#':
+                return False
+
+    return True
+
+def count_monster(mp, monster):
+    result = 0
+    for i in range(0, len(mp)-len(monster)):
+        for j in range(0, len(mp[i])-len(monster[0])):
+            if is_monster(mp, monster, i, j):
+                result += 1
+
+    return result
+
+def count_all_monster(mp, monster):
+    for i in range(0, 4):
+        c = count_monster(mp, monster)
+        if c > 0:
+            return c
+
+        c = count_monster(flip_vert_map(mp), monster)
+        if c > 0:
+            return c
+
+        c = count_monster(flip_hor_map(mp), monster)
+        if c > 0:
+            return c
+
+        mp = rotate_map(mp)
+
+def count_non_sea(mp):
+    non_sea = 0
+    for i in range(0, len(mp)):
+        for j in range(0, len(mp[i])):
+            if mp[i][j] == '#':
+                non_sea += 1
+
+    return non_sea
+
+part2 = count_non_sea(mp) - count_non_sea(monster) * count_all_monster(mp, monster)
+
+
+print("Part 2: %d" % part2)
